@@ -7,11 +7,13 @@
 
 #include "vip_if.h"
 
+#include <stdlib.h>
 
 class monitor : public uvm::uvm_monitor
 {
   protected:
   vip_if* dut_vif ;
+
   std::string name_vif;
   public:      
       
@@ -31,15 +33,19 @@ class monitor : public uvm::uvm_monitor
 
   void run_phase(uvm::uvm_phase& phase)
   {
-    phase.raise_objection(this);
+    phase.raise_objection(this);    
     UVM_INFO("", "TEST START", uvm::UVM_MEDIUM);    
     dut_vif -> nrst = 0;
     wait(10, SC_NS);
     dut_vif -> nrst = 1;
-    wait(1000, SC_NS);
+    
+    wait(100, SC_MS);
     UVM_INFO("", "TEST FINISH", uvm::UVM_MEDIUM);
     phase.drop_objection(this);
   }      
+
+
+
 };
 
 #endif 

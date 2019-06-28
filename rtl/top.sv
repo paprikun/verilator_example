@@ -1,7 +1,7 @@
 module top (
-   input clk,
-   input nrst,
-   output pwm
+   input reg clk,
+   input reg nrst,
+   output reg pwm
 );
 
 parameter  STEPS     = 256;

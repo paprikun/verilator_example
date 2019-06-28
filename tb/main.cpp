@@ -11,6 +11,18 @@ using namespace uvm;
 
 #define TRACE
 
+   int local_time, local_time_buf;  
+   void get_local_time()    
+    {
+        int fd;
+        int res;
+        res = system("date +%s > local_time");
+        FILE* iFile;
+        iFile = fopen ("local_time","rb");
+        res = fscanf(iFile, "%d", &local_time);      
+    }
+
+
 int sc_main(int argc, char * argv[])
 {
 #ifdef TRACE
@@ -18,28 +30,24 @@ int sc_main(int argc, char * argv[])
    Verilated::traceEverOn(true);
    VerilatedVcdSc* tfp = new VerilatedVcdSc;
 #endif
-
+    
+   
    sc_time T(10,SC_NS);
-
-   const unsigned int STEPS     = 256;
-   const unsigned int MAIN_DIV  = 4;
-   const unsigned int DIV_RATIO = 1;
-
-   sc_time Tsim = T * STEPS * MAIN_DIV * DIV_RATIO * 1024 * 2;
-
    sc_clock clk("clk",T);
-   sc_signal<bool> nrst("nrst");
-   sc_signal<bool> pwm ("pwm");
 
     vip_if* dut_vif_1 =new vip_if();
     uvm::uvm_config_db<vip_if*>::set(0, "", "vif1", dut_vif_1);
     
-   
+
+    sc_signal<bool> nrst;   
+    sc_signal<bool> pwm;
+
+
    Vtop dut("top_verilog");
 
    dut.clk (clk);
-   dut.nrst(dut_vif_1 -> nrst);
-   dut.pwm(dut_vif_1 -> pwm);
+   dut.nrst(dut_vif_1-> nrst);
+   dut.pwm(dut_vif_1->pwm);
 
 
 
@@ -47,12 +55,18 @@ int sc_main(int argc, char * argv[])
    
 #ifdef TRACE
    // Verilator trace file, depth
-   dut.trace(tfp, 10);
+   dut.trace(tfp, 0);
    tfp->open("simu.vcd");
 #endif
 
-   uvm::run_test();
-   
+
+    get_local_time();
+    local_time_buf = local_time;
+    uvm::run_test();
+    get_local_time();
+    printf("RESULT TIME = %d sec\n",local_time - local_time_buf );
+
+
 
 #ifdef TRACE
    tfp->close();
