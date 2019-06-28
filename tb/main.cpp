@@ -2,40 +2,17 @@
 #include <uvm>
 using namespace uvm;
 
-
 #include "verilated_vcd_sc.h"
-
+#include "uvm/vip_if.h"
+#include "uvm/monitor.h"
 
 // V{RTL_TOP}.h
 #include "Vtop.h"
 
 #define TRACE
 
-template <typename REQ = uvm::uvm_sequence_item, typename RSP = REQ>
-class master_driver : public uvm::uvm_driver<REQ,RSP>
-{
-
- public:
-  UVM_COMPONENT_UTILS(master_driver<REQ,RSP>);
-    
-  master_driver(uvm::uvm_component_name name) : uvm::uvm_driver<REQ,RSP>(name)
-  {
-  }
-
-
-  void run_phase(uvm_phase& phase)
-  {
-  
-  }
-
-};
-
-
-
 int sc_main(int argc, char * argv[])
 {
-    
-
 #ifdef TRACE
    // Verilator trace file
    Verilated::traceEverOn(true);
@@ -54,22 +31,28 @@ int sc_main(int argc, char * argv[])
    sc_signal<bool> nrst("nrst");
    sc_signal<bool> pwm ("pwm");
 
+    vip_if* dut_vif_1 =new vip_if();
+    uvm::uvm_config_db<vip_if*>::set(0, "", "vif1", dut_vif_1);
+    
+   
    Vtop dut("top_verilog");
 
    dut.clk (clk);
-   dut.nrst(nrst);
-   dut.pwm(pwm);
+   dut.nrst(dut_vif_1 -> nrst);
+   dut.pwm(dut_vif_1 -> pwm);
 
+
+
+    monitor e1("vif1");   
+   
 #ifdef TRACE
    // Verilator trace file, depth
    dut.trace(tfp, 10);
    tfp->open("simu.vcd");
 #endif
 
-   nrst = 0;
-   sc_start(10*T);
-   nrst = 1;
-   sc_start(Tsim);
+   uvm::run_test();
+   
 
 #ifdef TRACE
    tfp->close();
